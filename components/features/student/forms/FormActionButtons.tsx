@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useFormRendererContext } from "./form-renderer.ctx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormFiller } from "./form-filler.ctx";
 import { useMyAutofillUpdate, useMyAutofill } from "@/hooks/use-my-autofill";
 import { useProfileData } from "@/lib/api/student.data.api";
@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { toastPresets } from "@/components/ui/sonner-toast";
 import { useSignContext } from "@/components/providers/sign.ctx";
 import { CircleHelp } from "lucide-react";
+import { useClientProcess } from "@betterinternship/components";
 
 export function FormActionButtons() {
   const form = useFormRendererContext();
@@ -32,6 +33,12 @@ export function FormActionButtons() {
   const updateAutofill = useMyAutofillUpdate();
   const signContext = useSignContext();
   const queryClient = useQueryClient();
+  const filloutFormRequest = useClientProcess({
+    caller: FormService.filloutForm.bind(FormService),
+    loadingMessage: `Generating ${form.formLabel}...`,
+    successMessage: `Successfully generated ${form.formLabel}!`,
+    failureMessage: `Could not generate ${form.formLabel}.`,
+  });
 
   const noEsign = !form.formMetadata.mayInvolveEsign();
   const initiateFormLabel = "Sign via BetterInternship";
@@ -116,7 +123,7 @@ export function FormActionButtons() {
 
         // Just fill out form
       } else {
-        const response = await FormService.filloutForm({
+        const response = await filloutFormRequest.run({
           formName: form.formName,
           formVersion: form.formVersion,
           values: finalValues,
@@ -141,6 +148,17 @@ export function FormActionButtons() {
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (filloutFormRequest.status === "handled")
+      void queryClient.invalidateQueries({ queryKey: ["my-forms"] });
+
+    console.log(
+      "FILLOUT FORM REQUEST",
+      filloutFormRequest.result,
+      filloutFormRequest.status,
+    );
+  }, [filloutFormRequest]);
 
   return (
     <TooltipProvider>

@@ -16,7 +16,6 @@ import { FormFillerContextProvider } from "@/components/features/student/forms/f
 import { FormsNavigation } from "@/components/features/student/forms/FormsNavigation";
 import { useMyForms } from "./myforms.ctx";
 import { SignContextProvider } from "@/components/providers/sign.ctx";
-import { SonnerToaster } from "@/components/ui/sonner-toast";
 import { useMobile } from "@/hooks/use-mobile";
 import { useHeaderContext, MobileAddonConfig } from "@/lib/ctx-header";
 
@@ -173,7 +172,6 @@ const FormsLayout = ({ children }: { children: React.ReactNode }) => {
           <FormFillerContextProvider>
             <SignContextProvider>
               <FormsLayoutContent>{children}</FormsLayoutContent>
-              <SonnerToaster />
             </SignContextProvider>
           </FormFillerContextProvider>
         </FormRendererContextProvider>

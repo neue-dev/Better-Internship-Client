@@ -12,10 +12,22 @@ import {
 import { APIClient, APIRouteBuilder } from "./api-client";
 import { FetchResponse } from "@/lib/api/use-fetch";
 import { IFormMetadata, IFormSigningParty } from "@betterinternship/core/forms";
-import { Tables } from "@betterinternship/schema.base";
 
 interface EmployerResponse extends FetchResponse {
   employer: Partial<Employer>;
+}
+
+export interface ProcessCallbackDto {
+  processId: string;
+  processName: string;
+}
+
+export interface ProcessResponse {
+  processId: string;
+  processName: string;
+  processCallbackUrl: string;
+  success: boolean;
+  message?: string;
 }
 
 export const EmployerService = {
@@ -180,13 +192,10 @@ export const FormService = {
     values: Record<string, string>;
     disableEsign?: boolean;
   }) {
-    return APIClient.post<{
-      formProcessId: string;
-      documentId?: string;
-      documentUrl?: string;
-      success?: boolean;
-      message?: string;
-    }>(APIRouteBuilder("users").r("me/fillout-form").build(), data);
+    return APIClient.post<ProcessResponse>(
+      APIRouteBuilder("users").r("me/fillout-form").build(),
+      data,
+    );
   },
 
   async getMyFormTemplates() {
