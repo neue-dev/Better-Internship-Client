@@ -54,7 +54,6 @@ const ForgotPasswordForm = ({}) => {
       // @ts-ignore
       setMessage(r.message);
     } catch (err: any) {
-      console.log(err);
       setError(err.response?.data?.message ?? err.message ?? "Something went wrong. Please try again later.");
     } finally {
       setIsLoading(false);
