@@ -1,13 +1,17 @@
 "use client";
 
 import { HeaderIcon, HeaderText } from "@/components/ui/text";
-import { Newspaper } from "lucide-react";
+import { Mail, MessageSquare, Newspaper, Plus, PlusCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import { FormLog } from "./FormLog";
 import { IFormSigningParty } from "@betterinternship/core/forms";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "../ui/button";
+import { useFormsLayout } from "@/app/student/forms/layout";
+import { useAppContext } from "@/lib/ctx-app";
 
 interface FormHistoryViewProps {
   forms: Array<{
@@ -28,6 +32,9 @@ interface FormHistoryViewProps {
  * Form History View
  */
 export function FormHistoryView({ forms }: FormHistoryViewProps) {
+  const { setActiveView } = useFormsLayout();
+  const { isMobile } = useAppContext();
+
   return (
     <div className="h-full overflow-y-auto py-3 px-4">
       <div className="max-w-5xl mx-auto">
@@ -45,9 +52,22 @@ export function FormHistoryView({ forms }: FormHistoryViewProps) {
             <div className="flex flex-col gap-1 items-center justify-center py-12 text-center">
               <p className="text-lg font-medium text-gray-600">No forms yet</p>
               <p className="text-sm text-gray-500">
-                You haven't generated any forms yet. Create your first form to
+                You haven't generated any forms yet. Generate your first form to
                 get started!
               </p>
+              <div className={cn(
+                "flex gap-2 mt-4",
+                isMobile && "flex-col"
+              )}>
+                <Button
+                  className="px-8 py-6"
+                  variant="default"
+                  onClick={() => setActiveView('generate')}
+                >
+                  <Plus />
+                  Generate a form
+                </Button>
+              </div>
             </div>
           ) : (
             forms

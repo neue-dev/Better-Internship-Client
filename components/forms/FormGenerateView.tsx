@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { HorizontalCollapsible } from "@/components/ui/horizontal-collapse";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { useAppContext } from "@/lib/ctx-app";
 
 /**
  * Generate Forms View
@@ -22,6 +23,7 @@ export function FormGenerateView({
   isLoading: boolean;
 }) {
   const router = useRouter();
+  const { isMobile } = useAppContext();
 
   return (
     <div className="h-full overflow-y-auto py-3 px-4">
@@ -61,7 +63,10 @@ export function FormGenerateView({
                 <p className="text-sm text-gray-500">
                   In the meantime, please contact us and we'll personally assist you.
                 </p>
-                <div className="flex gap-2 mt-4">
+                <div className={cn(
+                  "flex gap-2 mt-4",
+                  isMobile && "flex-col"
+                )}>
                   <Link
                     href="https://www.facebook.com/profile.php?id=61586110929431"
                   >
