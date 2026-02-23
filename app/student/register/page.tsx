@@ -223,6 +223,9 @@ export default function RegisterPage() {
     }
   }, [internshipType, regForm.getValues()]);
 
+  // !TEMP -- disable ateneo
+  const universityOptions = refs.universities?.filter((u) => u.name !== "ADMU");
+
   return (
     <div className="">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
@@ -295,7 +298,7 @@ export default function RegisterPage() {
                       <div className="space-y-2 flex-1">
                         <FormDropdown
                           label="Which university are you from?"
-                          options={refs.universities}
+                          options={universityOptions}
                           setter={(value) =>
                             regForm.setValue("university", value + "")
                           }
