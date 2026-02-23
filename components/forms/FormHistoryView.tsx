@@ -29,10 +29,10 @@ interface FormHistoryViewProps {
  */
 export function FormHistoryView({ forms }: FormHistoryViewProps) {
   return (
-    <div className="h-full overflow-y-auto py-6 px-4">
+    <div className="h-full overflow-y-auto py-3 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="animate-fade-in">
-          <div className="flex flex-row items-center gap-3 mb-2">
+          <div className="flex flex-row items-center gap-3 mt-4 mb-2">
             <HeaderIcon icon={Newspaper}></HeaderIcon>
             <HeaderText>Form History</HeaderText>
           </div>
@@ -42,9 +42,9 @@ export function FormHistoryView({ forms }: FormHistoryViewProps) {
 
         <div className="animate-fade-in">
           {forms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex flex-col gap-1 items-center justify-center py-12 text-center">
               <p className="text-lg font-medium text-gray-600">No forms yet</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500">
                 You haven't generated any forms yet. Create your first form to
                 get started!
               </p>
