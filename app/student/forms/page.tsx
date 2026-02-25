@@ -3,7 +3,7 @@
 import { useProfileData } from "@/lib/api/student.data.api";
 import { useRouter } from "next/navigation";
 import { FormService } from "@/lib/api/services";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMyForms } from "./myforms.ctx";
 import { FormGenerateView } from "../../../components/forms/FormGenerateView";
 import { FormHistoryView } from "../../../components/forms/FormHistoryView";
@@ -12,8 +12,9 @@ import {
   FORM_TEMPLATES_STALE_TIME,
   FORM_TEMPLATES_GC_TIME,
 } from "@/lib/consts/cache";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthContext } from "@/lib/ctx-auth";
+import { useClientProcess } from "@betterinternship/components";
 
 /**
  * The forms page component - shows either history or generate based on form count
@@ -24,8 +25,11 @@ export default function FormsPage() {
   const profile = useProfileData();
   const router = useRouter();
   const myForms = useMyForms();
+  const queryClient = useQueryClient();
+
   const { activeView } = useFormsLayout();
   const { redirectIfNotLoggedIn, isAuthenticated } = useAuthContext();
+  const [formHistory, setFormHistory] = useState([]);
 
   // Auth redirect at body level (runs first)
   redirectIfNotLoggedIn();
@@ -62,11 +66,26 @@ export default function FormsPage() {
     // enabled: !!updateInfo, // Only fetch after we have update info
   });
 
+  // Heeheehaw
+  const formFilloutProcess = useClientProcess({ filterKey: "form-fillout" });
+  const pendingForms = formFilloutProcess
+    .getAllPending()
+    .map((pendingForm) => ({
+      label: pendingForm.metadata?.metadata?.label ?? "",
+      timestamp: pendingForm.metadata?.metadata?.timestamp ?? "",
+      pending: true,
+    }));
+
+  // Refresh when processes become handled
+  useEffect(() => {
+    void queryClient.invalidateQueries({ queryKey: ["my-forms"] });
+  }, [formFilloutProcess.getAllHandled()]);
+
   return (
     <>
       {/* Show the active view */}
       {activeView === "history" ? (
-        <FormHistoryView forms={myForms?.forms ?? []} />
+        <FormHistoryView forms={[...myForms.forms, ...pendingForms]} />
       ) : (
         <FormGenerateView formTemplates={formTemplates} isLoading={isLoading} />
       )}

@@ -33,11 +33,24 @@ export function FormActionButtons() {
   const updateAutofill = useMyAutofillUpdate();
   const signContext = useSignContext();
   const queryClient = useQueryClient();
-  const filloutFormRequest = useClientProcess({
+  const formFilloutProcess = useClientProcess({
+    filterKey: "form-fillout",
     caller: FormService.filloutForm.bind(FormService),
-    loadingMessage: `Generating ${form.formLabel}...`,
-    successMessage: `Successfully generated ${form.formLabel}!`,
-    failureMessage: `Could not generate ${form.formLabel}.`,
+    onLoading: (processId) => {
+      toast.loading(`Generating ${form.formLabel}...`, { id: processId });
+    },
+    onSuccess: (processId, _processName, result) => {
+      toast.success(`Generated ${form.formLabel}!`, { id: processId });
+      setTimeout(() => toast.dismiss(processId), 2000);
+      console.log("RESULT: ", result);
+    },
+    onFailure: (processId, _processName, error) => {
+      toast.error(`Could not generate ${form.formLabel}: ${error}`, {
+        id: processId,
+      });
+      setTimeout(() => toast.dismiss(processId), 2000);
+      console.log("ERROR: ", error);
+    },
   });
 
   const noEsign = !form.formMetadata.mayInvolveEsign();
@@ -123,11 +136,17 @@ export function FormActionButtons() {
 
         // Just fill out form
       } else {
-        const response = await filloutFormRequest.run({
-          formName: form.formName,
-          formVersion: form.formVersion,
-          values: finalValues,
-        });
+        const response = await formFilloutProcess.run(
+          {
+            formName: form.formName,
+            formVersion: form.formVersion,
+            values: finalValues,
+          },
+          {
+            label: form.formLabel,
+            timestamp: new Date().toISOString(),
+          },
+        );
 
         if (!response.success) {
           setBusy(false);
@@ -148,17 +167,6 @@ export function FormActionButtons() {
       setBusy(false);
     }
   };
-
-  useEffect(() => {
-    if (filloutFormRequest.status === "handled")
-      void queryClient.invalidateQueries({ queryKey: ["my-forms"] });
-
-    console.log(
-      "FILLOUT FORM REQUEST",
-      filloutFormRequest.result,
-      filloutFormRequest.status,
-    );
-  }, [filloutFormRequest]);
 
   return (
     <TooltipProvider>

@@ -1,21 +1,20 @@
 "use client";
 
 import { HeaderIcon, HeaderText } from "@/components/ui/text";
-import { Mail, MessageSquare, Newspaper, Plus, PlusCircle } from "lucide-react";
+import { Newspaper, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import { FormLog } from "./FormLog";
 import { IFormSigningParty } from "@betterinternship/core/forms";
 import { cn, formatDate } from "@/lib/utils";
-import Link from "next/link";
 import { Button } from "../ui/button";
 import { useFormsLayout } from "@/app/student/forms/layout";
 import { useAppContext } from "@/lib/ctx-app";
 
 interface FormHistoryViewProps {
   forms: Array<{
-    form_process_id: string;
+    form_process_id?: string;
     label: string;
     prefilled_document_id?: string | null;
     pending_document_id?: string | null;
@@ -25,6 +24,7 @@ interface FormHistoryViewProps {
     signing_parties?: IFormSigningParty[];
     status?: string | null;
     rejection_reason?: string;
+    pending?: boolean;
   }>;
 }
 
@@ -55,14 +55,11 @@ export function FormHistoryView({ forms }: FormHistoryViewProps) {
                 You haven't generated any forms yet. Generate your first form to
                 get started!
               </p>
-              <div className={cn(
-                "flex gap-2 mt-4",
-                isMobile && "flex-col"
-              )}>
+              <div className={cn("flex gap-2 mt-4", isMobile && "flex-col")}>
                 <Button
                   className="px-8 py-6"
                   variant="default"
-                  onClick={() => setActiveView('generate')}
+                  onClick={() => setActiveView("generate")}
                 >
                   <Plus />
                   Generate a form
@@ -72,7 +69,8 @@ export function FormHistoryView({ forms }: FormHistoryViewProps) {
           ) : (
             forms
               .toSorted(
-                (a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp),
+                (a, b) =>
+                  Date.parse(b.timestamp ?? "") - Date.parse(a.timestamp ?? ""),
               )
               .map((form, index) => (
                 <FormLog
@@ -88,6 +86,7 @@ export function FormHistoryView({ forms }: FormHistoryViewProps) {
                   status={form.status}
                   rejectionReason={form.rejection_reason}
                   index={index}
+                  pending={form.pending}
                 />
               ))
           )}

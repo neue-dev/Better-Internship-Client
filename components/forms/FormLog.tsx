@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { IFormSigningParty } from "@betterinternship/core/forms";
 import { Badge } from "../ui/badge";
-import { Divider } from "../ui/divider";
 import { Button } from "../ui/button";
 import { SigningStatusTimeline } from "./SigningStatusTimeline";
 import useModalRegistry from "../modals/modal-registry";
@@ -28,10 +27,11 @@ export const FormLog = ({
   signingParties,
   status,
   rejectionReason,
+  pending,
   index = -1,
 }: {
-  formProcessId: string;
-  label: string;
+  formProcessId?: string;
+  label?: string;
   timestamp: string;
   documentId?: string | null;
   downloadUrl?: string | null;
@@ -39,6 +39,7 @@ export const FormLog = ({
   status?: string | null;
   rejectionReason?: string;
   index?: number;
+  pending?: boolean;
 }) => {
   const modalRegistry = useModalRegistry();
   const [downloading, setDownloading] = useState(false);
@@ -59,7 +60,38 @@ export const FormLog = ({
     }
   };
 
-  if (rejectionReason) console.log(rejectionReason);
+  if (pending) {
+    return (
+      <div className="bg-slate-200 transition-all border-b opacity-65">
+        <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-700 space-y-3">
+          {/* Status Badge */}
+          <div className="flex items-center gap-2">
+            <Badge
+              type="primary"
+              className="gap-1 flex items-center font-medium"
+            >
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Generating
+            </Badge>
+          </div>
+          {/* Content Section */}
+          <div className="flex flex-col gap-3">
+            {/* Header with Label, Timestamp, and Actions */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium text-gray-900 text-ellipsis line-clamp-1">
+                  {label}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">{timestamp}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!formProcessId) return <></>;
 
   return (
     <div
