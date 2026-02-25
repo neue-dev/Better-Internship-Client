@@ -84,9 +84,9 @@ class FetchClient {
       const response = await fetch(url, config);
       if (!response.ok && response.status !== 304) {
         const errorData = await response.json().catch(() => ({}));
-        // console.warn(`${url}: ${errorData.message || response.status}`);
-        // return { error: errorData.message } as T;
-        throw new Error(errorData.message || "Something went wrong.");
+        console.warn(`${url}: ${errorData.message || response.status}`);
+        return { error: errorData.message } as T;
+        // throw new Error(errorData.message || "Something went wrong.");
       }
 
       const contentType = response.headers.get("content-type");
