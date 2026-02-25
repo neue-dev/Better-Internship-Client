@@ -77,9 +77,6 @@ export function FormHistoryView({ forms }: FormHistoryViewProps) {
                   formProcessId={form.form_process_id}
                   key={form.timestamp}
                   label={form.label}
-                  documentId={
-                    form.signed_document_id ?? form.prefilled_document_id
-                  }
                   timestamp={formatDate(form.timestamp)}
                   downloadUrl={form.latest_document_url}
                   signingParties={form.signing_parties}

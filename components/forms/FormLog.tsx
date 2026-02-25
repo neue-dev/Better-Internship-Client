@@ -22,7 +22,6 @@ export const FormLog = ({
   formProcessId,
   label,
   timestamp,
-  documentId,
   downloadUrl,
   signingParties,
   status,
@@ -33,7 +32,6 @@ export const FormLog = ({
   formProcessId?: string;
   label?: string;
   timestamp: string;
-  documentId?: string | null;
   downloadUrl?: string | null;
   signingParties?: IFormSigningParty[];
   status?: string | null;
@@ -46,7 +44,7 @@ export const FormLog = ({
   const [isOpen, setIsOpen] = useState(index === 0);
 
   const handleDownload = () => {
-    if (!documentId) return;
+    if (!downloadUrl) return;
     try {
       setDownloading(true);
       const a = document.createElement("a");
@@ -91,12 +89,12 @@ export const FormLog = ({
     );
   }
 
-  if (!formProcessId) return <></>;
-
   return (
     <div
       className="hover:bg-slate-100 hover:cursor-pointer transition-all border-b "
-      onClick={() => (documentId ? handleDownload() : setIsOpen(!isOpen))}
+      onClick={() =>
+        downloadUrl && status === "done" ? handleDownload() : setIsOpen(!isOpen)
+      }
     >
       <div className="px-4 sm:px-6 py-4 text-xs sm:text-sm text-gray-700 space-y-3">
         {/* Status Badge */}
@@ -149,7 +147,7 @@ export const FormLog = ({
 
             {/* Desktop action buttons and chevron */}
             <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-              {!rejectionReason && !documentId && (
+              {!rejectionReason && status !== "done" && (
                 <>
                   <Button
                     className="text-xs h-8"
@@ -157,7 +155,8 @@ export const FormLog = ({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      modalRegistry.resendFormRequest.open(formProcessId);
+                      if (formProcessId)
+                        modalRegistry.resendFormRequest.open(formProcessId);
                     }}
                   >
                     Resend
@@ -168,24 +167,30 @@ export const FormLog = ({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      modalRegistry.cancelFormRequest.open(formProcessId);
+                      if (formProcessId)
+                        modalRegistry.cancelFormRequest.open(formProcessId);
                     }}
                   >
                     Cancel
                   </Button>
                 </>
               )}
-              {documentId ? (
+              {status === "done" ? (
                 <Button
                   className="text-xs h-8 gap-1"
                   size="xs"
                   variant="default"
+                  disabled={!downloadUrl}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDownload();
                   }}
                 >
-                  <DownloadIcon className="w-3.5 h-3.5" />
+                  {!downloadUrl ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <DownloadIcon className="w-3.5 h-3.5" />
+                  )}
                   <span className="hidden sm:inline">Download</span>
                 </Button>
               ) : (
@@ -207,7 +212,7 @@ export const FormLog = ({
 
             {/* Mobile chevron/download */}
             <div className="sm:hidden flex-shrink-0">
-              {documentId ? (
+              {status === "done" ? (
                 <Button
                   className="text-xs h-8 gap-1"
                   size="xs"
@@ -217,7 +222,11 @@ export const FormLog = ({
                     handleDownload();
                   }}
                 >
-                  <DownloadIcon className="w-3 h-3" />
+                  {!downloadUrl ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <DownloadIcon className="w-3 h-3" />
+                  )}
                   <span>Download</span>
                 </Button>
               ) : (
@@ -239,7 +248,7 @@ export const FormLog = ({
           </div>
 
           {/* Mobile action buttons */}
-          {!rejectionReason && !documentId && (
+          {!rejectionReason && status !== "done" && (
             <div className="sm:hidden flex gap-2">
               <Button
                 className="text-xs h-8 flex-1"
@@ -247,7 +256,8 @@ export const FormLog = ({
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  modalRegistry.resendFormRequest.open(formProcessId);
+                  if (formProcessId)
+                    modalRegistry.resendFormRequest.open(formProcessId);
                 }}
               >
                 Resend
@@ -258,7 +268,8 @@ export const FormLog = ({
                 variant="outline"
                 onClick={(e) => {
                   e.stopPropagation();
-                  modalRegistry.cancelFormRequest.open(formProcessId);
+                  if (formProcessId)
+                    modalRegistry.cancelFormRequest.open(formProcessId);
                 }}
               >
                 Cancel
@@ -267,7 +278,7 @@ export const FormLog = ({
           )}
 
           {/* Expandable Details Section */}
-          {!documentId && isOpen && (
+          {status !== "done" && isOpen && (
             <div className="mt-2 p-4 bg-white border border-gray-200 rounded-[0.33em]">
               <div className="flex flex-col gap-4">
                 {!!rejectionReason && (

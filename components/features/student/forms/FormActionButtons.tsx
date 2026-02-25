@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useFormRendererContext } from "./form-renderer.ctx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFormFiller } from "./form-filler.ctx";
 import { useMyAutofillUpdate, useMyAutofill } from "@/hooks/use-my-autofill";
 import { useProfileData } from "@/lib/api/student.data.api";
@@ -23,10 +23,13 @@ import { toastPresets } from "@/components/ui/sonner-toast";
 import { useSignContext } from "@/components/providers/sign.ctx";
 import { CircleHelp } from "lucide-react";
 import { useClientProcess } from "@betterinternship/components";
+import { useMyForms } from "@/app/student/forms/myforms.ctx";
+import { FilloutFormProcessResult } from "@/app/student/forms/page";
 
 export function FormActionButtons() {
   const form = useFormRendererContext();
   const formFiller = useFormFiller();
+  const myForms = useMyForms();
   const autofillValues = useMyAutofill();
   const profile = useProfileData();
   const modalRegistry = useModalRegistry();
@@ -36,19 +39,26 @@ export function FormActionButtons() {
   const formFilloutProcess = useClientProcess({
     filterKey: "form-fillout",
     caller: FormService.filloutForm.bind(FormService),
-    onLoading: (processId) => {
-      toast.loading(`Generating ${form.formLabel}...`, { id: processId });
-    },
+    invalidator: useCallback(
+      (result: FilloutFormProcessResult) => {
+        return myForms.forms.some(
+          (form) => form.form_process_id === result.formProcessId,
+        );
+      },
+      [myForms.forms],
+    ),
     onSuccess: (processId, _processName, result) => {
-      toast.success(`Generated ${form.formLabel}!`, { id: processId });
-      setTimeout(() => toast.dismiss(processId), 2000);
+      toast.success(`Generated ${form.formLabel}!`, {
+        id: processId,
+        duration: 2000,
+      });
       console.log("RESULT: ", result);
     },
     onFailure: (processId, _processName, error) => {
       toast.error(`Could not generate ${form.formLabel}: ${error}`, {
         id: processId,
+        duration: 2000,
       });
-      setTimeout(() => toast.dismiss(processId), 2000);
       console.log("ERROR: ", error);
     },
   });
@@ -154,8 +164,6 @@ export function FormActionButtons() {
           console.error(response.message);
           return;
         }
-
-        await queryClient.invalidateQueries({ queryKey: ["my-forms"] });
 
         modalRegistry.formSubmissionSuccess.open("manual");
       }

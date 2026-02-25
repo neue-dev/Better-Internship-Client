@@ -12,9 +12,16 @@ import {
   FORM_TEMPLATES_STALE_TIME,
   FORM_TEMPLATES_GC_TIME,
 } from "@/lib/consts/cache";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useAuthContext } from "@/lib/ctx-auth";
 import { useClientProcess } from "@betterinternship/components";
+
+// ! MOVE THIS ELSEWHERE
+export interface FilloutFormProcessResult {
+  formId: string;
+  formProcessId: string;
+  downloadUrl: string;
+}
 
 /**
  * The forms page component - shows either history or generate based on form count
@@ -29,7 +36,6 @@ export default function FormsPage() {
 
   const { activeView } = useFormsLayout();
   const { redirectIfNotLoggedIn, isAuthenticated } = useAuthContext();
-  const [formHistory, setFormHistory] = useState([]);
 
   // Auth redirect at body level (runs first)
   redirectIfNotLoggedIn();
@@ -66,26 +72,59 @@ export default function FormsPage() {
     // enabled: !!updateInfo, // Only fetch after we have update info
   });
 
-  // Heeheehaw
+  // ? I think I can abstract this somehow in the future
+  // ? How it works right now:
+  // ? The form history renders a combination of the pulled forms (from the db) AND the pending forms (from the client process manager)
+  // ? BUT when a pending form turns into a handled form, the pulled forms doesn't update right away
+  // ? SO handled forms are also temporarily rendered WHILE they're not part of the pulled forms yet
+  // ? All the logic below really does is make sure that once the handled forms are in the pulled forms, they're not rendered anymore
+  // ? There has to be a better way to do this repeatably
   const formFilloutProcess = useClientProcess({ filterKey: "form-fillout" });
-  const pendingForms = formFilloutProcess
-    .getAllPending()
-    .map((pendingForm) => ({
-      label: pendingForm.metadata?.metadata?.label ?? "",
-      timestamp: pendingForm.metadata?.metadata?.timestamp ?? "",
-      pending: true,
-    }));
+  const pendingForms = useMemo(
+    () =>
+      formFilloutProcess.getAllPending().map((pendingForm) => ({
+        label: pendingForm.metadata?.metadata?.label ?? "",
+        timestamp: pendingForm.metadata?.metadata?.timestamp ?? "",
+        pending: true,
+      })),
+    [myForms.forms],
+  );
+  const handledForms = useMemo(
+    () =>
+      formFilloutProcess
+        .getAllHandled()
+        .filter((handledForm) =>
+          myForms.forms.every(
+            (form) =>
+              form.form_process_id !==
+              (handledForm.result as FilloutFormProcessResult).formProcessId,
+          ),
+        )
+        .map((handledForm) => ({
+          label: handledForm.metadata?.metadata?.label ?? "",
+          timestamp: handledForm.metadata?.metadata?.timestamp ?? "",
+          downloadUrl: (handledForm.result as FilloutFormProcessResult)
+            .downloadUrl,
+          pending: false,
+          status: "done",
+        })),
+    [myForms.forms],
+  );
 
-  // Refresh when processes become handled
+  // Refetch forms when no more pending left
+  // Yeppers kinda janky I know
   useEffect(() => {
-    void queryClient.invalidateQueries({ queryKey: ["my-forms"] });
-  }, [formFilloutProcess.getAllHandled()]);
+    if (!formFilloutProcess.getAllPending().length)
+      void queryClient.invalidateQueries({ queryKey: ["my-forms"] });
+  }, [formFilloutProcess.getAllPending()]);
 
   return (
     <>
       {/* Show the active view */}
       {activeView === "history" ? (
-        <FormHistoryView forms={[...myForms.forms, ...pendingForms]} />
+        <FormHistoryView
+          forms={[...myForms.forms, ...handledForms, ...pendingForms]}
+        />
       ) : (
         <FormGenerateView formTemplates={formTemplates} isLoading={isLoading} />
       )}
